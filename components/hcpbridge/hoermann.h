@@ -13,7 +13,12 @@
 #define SIMULATEKEYPRESSDELAYMS 100
 #define DEADREPORTTIMEOUT 60000
 
-#define RS485 Serial2
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  // ESP32-C3 has only Serial (UART0) and Serial1 (UART1)
+  #define RS485 Serial1
+#else
+  #define RS485 Serial2
+#endif
 #ifdef CONFIG_IDF_TARGET_ESP32S3
 #define PIN_TXD 17
 #define PIN_RXD 18
