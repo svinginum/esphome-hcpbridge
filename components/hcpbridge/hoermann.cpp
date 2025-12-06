@@ -46,16 +46,26 @@ void HoermannGarageEngine::setup(int8_t rx, int8_t tx, int8_t rts)
   }
   mb.slave(SLAVE_ID);
 
-  xTaskCreatePinnedToCore(
-      modbusServeTask, /* Function to implement the task */
-      "ModBusTask",    /* Name of the task */
-      10000,           /* Stack size in words */
-      NULL,            /* Task input parameter */
-      // 1,  /* Priority of the task */
-      configMAX_PRIORITIES - 1,
-      &modBusTask, /* Task handle. */
-      1);          /* Core where the task should run */
+// Choose core depending on target:
+  // - ESP32-C3: single core (0)
+  // - Others (ESP32/S3): keep existing behaviour (core 1)
+  BaseType_t core_id =
+  #if defined(CONFIG_IDF_TARGET_ESP32C3)
+      0;
+  #else
+      1;
+  #endif
 
+  xTaskCreatePinnedToCore(
+      modbusServeTask,        /* Function to implement the task */
+      "ModBusTask",           /* Name of the task */
+      10000,                  /* Stack size in words */
+      NULL,                   /* Task input parameter */
+      configMAX_PRIORITIES - 1,
+      &modBusTask,            /* Task handle. */
+      core_id                 /* Core where the task should run */
+  );
+  
   // Required for Write
   mb.addHreg(0x9C41, 0, 0x03); // Commands
   mb.addHreg(0x9D31, 0, 0x09); // Broadcast
